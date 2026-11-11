@@ -1,0 +1,51 @@
+name: Build the draft site
+
+# Builds the Tradition Local site in draft mode from the main repo and publishes it on this repo's own address.
+# It runs by itself every 30 minutes, and you can run it any time from the Actions tab.
+# GitHub pauses automatic runs after 60 days with no activity in this repo. If that happens, run it once by hand.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/30 * * * *'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: traditionrealty/traditionlocal-next
+          ref: main
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install --no-audit --no-fund
+      - id: pages
+        uses: actions/configure-pages@v5
+      - name: Build the draft site
+        run: npm run build
+        env:
+          SITE_URL: ${{ steps.pages.outputs.origin }}
+          BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          SITE_MODE: preview
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: dist }
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
