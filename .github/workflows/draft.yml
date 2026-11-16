@@ -9,7 +9,7 @@ name: Build the draft site
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/30 * * * *'→ Runs every 30 minutes
+    - cron: '*/30 * * * *'
 
 
 
